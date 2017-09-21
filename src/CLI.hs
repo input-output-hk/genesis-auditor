@@ -1,21 +1,28 @@
-
+{-# LANGUAGE TypeApplications #-}
 module CLI (parseCLI) where
 
 import Options.Applicative
 import Data.ByteString.Char8 as C8
+import Data.String.Conv
 import Data.Monoid
 import Types
+import Crypto.Hash
 
 parseCLI :: Parser CLI
 parseCLI = CLI
       <$> parserHash
       <*> parseGenesisFile
 
-parserHash :: Parser Hash
-parserHash = Hash . C8.pack <$> strOption
+parserHash :: Parser ByteString
+parserHash = C8.pack <$> strOption
           ( long "target-sha"
          <> metavar "BLAKE256-SHA"
          <> help "Expected SHA for the canonical JSON encoding." )
+  where
+    readDigest :: String -> Either String (Digest Blake2b_256)
+    readDigest x = case digestFromByteString (toS x :: ByteString) of
+      Nothing -> Left $ "Invalid Digest: " <> x
+      Just d -> Right d
 
 parseGenesisFile :: Parser FilePath
 parseGenesisFile = strOption

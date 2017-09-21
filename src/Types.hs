@@ -5,14 +5,12 @@ module Types where
 import Data.Aeson as JSON
 import Data.Aeson.Types
 import Control.Monad.Trans.Reader
-import Data.ByteString (ByteString)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
-
-newtype Hash = Hash { getHash :: ByteString } deriving (Show, Eq)
+import Data.ByteString
 
 data CLI = CLI
-  { expectedHash :: Hash
+  { expectedHash :: ByteString
   , genesisFile  :: FilePath
   } deriving Show
 

@@ -25,6 +25,8 @@ library
   build-depends:         base >= 4.7 && < 5
                        , aeson
                        , canonical-json
+                       , cryptonite
+                       , memory
                        , optparse-applicative
                        , mtl
                        , transformers

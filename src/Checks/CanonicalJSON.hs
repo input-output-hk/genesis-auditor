@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Checks.CanonicalJSON
   ( canonicalJsonCheck
@@ -7,11 +8,13 @@ module Checks.CanonicalJSON
 import Data.String.Conv
 import Text.JSON.Canonical
 import qualified Data.ByteString as BS
+import qualified Data.ByteString.Char8 as C8
 import Data.Monoid
 import Checks.Types
 import Types
 import Control.Monad.Reader
 import Control.Monad.Identity
+import Crypto.Hash as Crypto
 
 -- | Checks this is a valid canonical JSON and that the input hash corresponds.
 canonicalJsonCheck :: Check
@@ -24,8 +27,8 @@ doCheck :: GenesisData -> Auditor CheckStatus
 doCheck gData = do
   CLI{..} <- ask
   let rawBytes   = renderCanonicalJSON . runIdentity . toJSON $ gData
-  let actualHash = Hash mempty
-  return $ case actualHash == expectedHash of
+  let actualHash = Crypto.hashWith @BS.ByteString Blake2b_256 (toS rawBytes)
+  return $ case C8.unpack expectedHash == show actualHash of
     True  -> CheckPassed
     False -> CheckFailed $ "Expecting Hash " <> show expectedHash <> " but found hash " <> show actualHash
 

@@ -20,6 +20,7 @@ library
                        CLI
                        Checks
   other-modules:       Checks.CanonicalJSON
+                       Checks.VssCerts
                        Checks.Types
   build-depends:         base >= 4.7 && < 5
                        , aeson

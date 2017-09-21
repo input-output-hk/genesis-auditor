@@ -9,11 +9,11 @@ import Data.ByteString (ByteString)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 
-newtype Hash = Hash { getHash :: ByteString } deriving Show
+newtype Hash = Hash { getHash :: ByteString } deriving (Show, Eq)
 
 data CLI = CLI
-  { targetHash  :: Hash
-  , genesisFile :: FilePath
+  { expectedHash :: Hash
+  , genesisFile  :: FilePath
   } deriving Show
 
 newtype Auditor a = Auditor { runAuditor :: ReaderT CLI IO a }

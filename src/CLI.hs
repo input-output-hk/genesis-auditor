@@ -1,0 +1,30 @@
+
+module CLI where
+
+import Options.Applicative
+import Data.ByteString.Char8 as C8
+import Data.Monoid
+
+newtype Hash = Hash { getHash :: ByteString } deriving Show
+
+data CLI = CLI
+  { targetHash  :: Hash
+  , genesisFile :: FilePath
+  } deriving Show
+
+sample :: Parser CLI
+sample = CLI
+      <$> parserHash
+      <*> parseGenesisFile
+
+parserHash :: Parser Hash
+parserHash = Hash . C8.pack <$> strOption
+          ( long "target-sha"
+         <> metavar "BLAKE256-SHA"
+         <> help "Expected SHA for the canonical JSON encoding." )
+
+parseGenesisFile :: Parser FilePath
+parseGenesisFile = strOption
+          ( short 'i'
+         <> metavar "PATH-TO-INPUT-GENESIS-JSON"
+         <> help "The path to the input genesis JSON file." )

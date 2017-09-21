@@ -22,6 +22,9 @@ library
                        , aeson
                        , canonical-json
                        , optparse-applicative
+                       , mtl
+                       , transformers
+                       , string-conv
                        , bytestring
   default-language:    Haskell2010
 
@@ -32,6 +35,7 @@ executable genesis-auditor
   build-depends:       base
                      , genesis-auditor
                      , optparse-applicative
+                     , transformers
   default-language:    Haskell2010
 
 test-suite genesis-auditor-test

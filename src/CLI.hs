@@ -1,19 +1,13 @@
 
-module CLI where
+module CLI (parseCLI) where
 
 import Options.Applicative
 import Data.ByteString.Char8 as C8
 import Data.Monoid
+import Types
 
-newtype Hash = Hash { getHash :: ByteString } deriving Show
-
-data CLI = CLI
-  { targetHash  :: Hash
-  , genesisFile :: FilePath
-  } deriving Show
-
-sample :: Parser CLI
-sample = CLI
+parseCLI :: Parser CLI
+parseCLI = CLI
       <$> parserHash
       <*> parseGenesisFile
 

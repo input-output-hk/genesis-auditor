@@ -19,7 +19,6 @@ data CLI = CLI
 newtype Auditor a = Auditor { runAuditor :: ReaderT CLI IO a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadReader CLI)
 
-
 type GenesisWStakeholders = JSON.Value
 type GenesisDelegation = JSON.Value
 type Timestamp = JSON.Value

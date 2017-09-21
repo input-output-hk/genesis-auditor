@@ -18,6 +18,9 @@ library
   exposed-modules:     Lib
                        Types
                        CLI
+                       Checks
+  other-modules:       Checks.CanonicalJSON
+                       Checks.Types
   build-depends:         base >= 4.7 && < 5
                        , aeson
                        , canonical-json

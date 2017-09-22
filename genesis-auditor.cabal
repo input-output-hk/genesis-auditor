@@ -41,6 +41,7 @@ library
                        , unordered-containers
                        -- Needed to check dupes
                        , json
+                       , base64-bytestring
   default-language:    Haskell2010
 
 executable genesis-auditor

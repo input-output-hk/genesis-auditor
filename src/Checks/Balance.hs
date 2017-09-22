@@ -10,9 +10,13 @@ import Data.Aeson.Types
 import qualified Data.HashMap.Lazy as HM
 import Data.Monoid
 import Types
-import Data.Text.IO as T
+import Data.Text (Text)
+import qualified Data.Text.IO as T
 import qualified Text.Pretty.Simple as PP
 import Data.String.Conv
+
+import qualified Data.ByteString.Base64 as B64
+import qualified Data.ByteString.Base64.URL as B64URL
 
 balanceChecks :: [Check]
 balanceChecks = [ checkNonAvvmBalanceEmpty
@@ -42,7 +46,7 @@ doCheckAvvmDistribution GenesisData{..} = do
     JSON.eitherDecode . toS <$> liftIO (T.readFile avvmFile) >>= \case
         Left err -> pure $ CheckFailed $ "Could not parse AvvmBalance: " <> err
         Right ledger -> do
-            let avvmHashmap = HM.fromList $ (\(AvvmEntry address ada) -> (address, toS . show $ 1000000 * ada)) <$> ledger
+            let avvmHashmap = HM.fromList $ (\(AvvmEntry address ada) -> (convertToBS64URL address, toS . show $ 1000000 * ada)) <$> ledger
             pure $ if avvmHashmap == gdAvvmDistr
                 then CheckPassed
                 else let missing = avvmHashmap `HM.difference` gdAvvmDistr
@@ -57,3 +61,10 @@ doCheckAvvmDistribution GenesisData{..} = do
                                                 <> "\n    and " <> show (nUnexpected - 5) <> " more"
                                               ]
                         -- TODO: look for imbalances in addresses that exist in both
+
+convertToBS64URL :: Text -> Text
+convertToBS64URL = toS
+    . B64URL.encode
+    . either (\err -> error $ "error in B64.decode: " <> err) id
+    . B64.decode
+    . toS

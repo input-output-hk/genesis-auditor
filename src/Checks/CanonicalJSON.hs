@@ -114,6 +114,16 @@ instance (ReportSchemaErrors m) => FromJSON m Aeson.Value where
   fromJSON (JSString s)  = return (Aeson.String (toS s))
   fromJSON (JSArray  a)  = Aeson.Array . V.fromList <$> mapM fromJSON a
 
+instance (ReportSchemaErrors m) => FromJSON m T.Text where
+  fromJSON (JSString s) = return (toS s)
+  fromJSON _ = fail "fromJSON T.Text: type mismatch"
+
+instance (ReportSchemaErrors m) => FromJSON m VssCertificate where
+  fromJSON _ = fail "fromJSON VssCertificate: todo"
+
+instance (ReportSchemaErrors m) => FromJSON m DelegationCertificate where
+  fromJSON _ = fail "fromJSON DelegationCertificate: todo"
+
 instance (ReportSchemaErrors m) => FromJSON m GenesisData where
     fromJSON obj = do
         gdBootStakeholders <- fromJSField obj "bootStakeholders"

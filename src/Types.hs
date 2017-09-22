@@ -7,6 +7,7 @@ import qualified Data.HashMap.Lazy as HM
 import Data.Aeson as JSON
 import Data.Aeson.Types
 import Data.Aeson.TH
+import Data.Int (Int64)
 import Control.Monad.Trans.Reader
 import Data.Text (Text)
 import Control.Monad.IO.Class
@@ -22,6 +23,7 @@ data CLI = CLI
   -- | Path to a file containing all the VSS certificates that are
   -- supposed to be mentioned in the genesis file, one per core node.
   , vssCertsFile     :: FilePath
+  , avvmFile         :: FilePath
   , genesisFile      :: FilePath
   } deriving Show
 
@@ -51,11 +53,20 @@ type Timestamp                 = JSON.Value
 type GenesisNonAvvmBalances    = JSON.Object
 type BlockVersionData          = JSON.Value
 type ProtocolConstants         = JSON.Value
-type GenesisAvvmBalances       = JSON.Value
+type GenesisAvvmBalances       = HM.HashMap Text Text
 type SharedSeed                = JSON.Value
 type AddressHash               = Text
 type GenesisDelegation         = HM.HashMap AddressHash DelegationCertificate
 type VssCerts                  = HM.HashMap AddressHash VssCertificate
+
+data AvvmEntry = AvvmEntry
+    { ae_vendingAddress :: Text
+    , ae_ada :: Int64
+    } deriving (Show, Eq)
+
+deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 3 } ''AvvmEntry
+
+type AvvmLedger = [AvvmEntry]
 
 data GenesisData = GenesisData
     { gdAvvmDistr        :: GenesisAvvmBalances

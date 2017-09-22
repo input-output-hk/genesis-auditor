@@ -1,4 +1,5 @@
 {-# LANGUAGE RecordWildCards #-}
+{-# LANGUAGE TupleSections #-}
 {-# LANGUAGE RankNTypes #-}
 {-# LANGUAGE UndecidableInstances #-}
 {-# LANGUAGE FlexibleInstances #-}
@@ -10,7 +11,10 @@ module Checks.CanonicalJSON
 
 import Data.String.Conv
 import Text.JSON.Canonical
+import Text.JSON.Canonical.Types
+import qualified Data.Scientific as Scientific
 import qualified Data.Aeson as Aeson
+import qualified Data.Aeson.Types as Aeson
 import qualified Data.Vector as V
 import qualified Data.Text as T
 import Data.Maybe
@@ -98,10 +102,15 @@ instance (ReportSchemaErrors m, Eq k, Hashable k, FromObjectKey m k, FromJSON m 
         knownKeys (Just k) a = Just (k, a)
 
 instance (ReportSchemaErrors m) => FromJSON m Aeson.Value where
-  fromJSON (JSObject hm) = return (Aeson.Object HM.empty) -- placeholder
+  fromJSON (JSObject hm) = do
+    let convertHM input = do
+          x <- mapM (\(k,v) -> (toS k,) <$> fromJSON v) input
+          return $ HM.fromList x
+    converted <- convertHM hm
+    return (Aeson.Object converted)
   fromJSON (JSNull    )  = return Aeson.Null
   fromJSON (JSBool   b)  = return (Aeson.Bool b)
-  fromJSON (JSNum    n)  = return (Aeson.Number 0) -- placeholder
+  fromJSON (JSNum int54) = return (Aeson.toJSON $ int54ToInt64 int54)
   fromJSON (JSString s)  = return (Aeson.String (toS s))
   fromJSON (JSArray  a)  = Aeson.Array . V.fromList <$> mapM fromJSON a
 

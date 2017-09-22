@@ -48,9 +48,9 @@ doCheckStakeholdersMatch gdata = do
     let actualStakeholders = actualStakeholderSet gdata
     pure $ if  expectedStakeholders == actualStakeholders
         then CheckPassed
-        else CheckFailed $ unlines ["Expecting stakeholders " <> show expectedStakeholders <> " but got " <> show actualStakeholders
-                                   ,"  missing stakeholders: " <> show (expectedStakeholders `HS.difference` actualStakeholders)
-                                   ,"  unexpected stakeholders: " <> show (actualStakeholders `HS.difference` expectedStakeholders)
+        else CheckFailed $ unlines ["Mismatch between expected and actual stakeholders"
+                                   ,"  missing stakeholders: " <> show (HS.toList $ expectedStakeholders `HS.difference` actualStakeholders)
+                                   ,"  unexpected stakeholders: " <> show (HS.toList $ actualStakeholders `HS.difference` expectedStakeholders)
                                    ]
 
 -- | Checks that every stakeholder delegates, and that only stakeholders delegate
@@ -61,34 +61,21 @@ doCheckAddressCorrespondence gdata = do
     pure $ if actualStakeholders == delegationAddresses
         then CheckPassed
         else CheckFailed $ unlines [ "Mismatch between stakeholders and delegation certificates"
-                                   , "  No delegation for: " <> show (actualStakeholders `HS.difference` delegationAddresses)
-                                   , "  Unexpected delegation: " <> show (delegationAddresses `HS.difference` actualStakeholders)
+                                   , "  No delegation for: " <> show (HS.toList $ actualStakeholders `HS.difference` delegationAddresses)
+                                   , "  Unexpected delegation: " <> show (HS.toList $ delegationAddresses `HS.difference` actualStakeholders)
                                    ]
 
 -- | Checks that every heavy delegate issuerPk has an entry inside vssCert. This needs to be bijective.
 doCheckVssCorrespondence :: GenesisData -> Auditor CheckStatus
 doCheckVssCorrespondence gdata = do
-    let heavyDelegations = gdHeavyDelegation gdata
-    let vssCerts         = gdVssCerts gdata
-    case ((length $ HM.keys heavyDelegations) /= (length $ HM.keys vssCerts)) of
-      True -> pure $ CheckFailed $ unlines [ "heavyDelegations keys & vssCerts keys have different lengths."
-                                   , "HeavyDelegations.keys.length: " <> show (length $ HM.keys heavyDelegations)
-                                   , "VssCerts.keys.length: " <> show (length $ HM.keys vssCerts)
+    let delegatePks = HS.fromList . HM.elems $ dc_delegatePk <$> gdHeavyDelegation gdata
+    let signingKeys = HS.fromList . HM.elems $ vss_signingKey <$> gdVssCerts gdata
+    pure $ if delegatePks == signingKeys
+        then CheckPassed
+        else CheckFailed $ unlines [ "Mismatch between delegate public keys and signing keys in vssCertificates"
+                                   , "  No signing keyfor: " <> show (HS.toList $ delegatePks `HS.difference` signingKeys)
+                                   , "  Unexpected signing keys: " <> show (HS.toList $ signingKeys `HS.difference` delegatePks)
                                    ]
-      False -> do
-        let filtered1        = List.foldl' (\currentMap vssCert -> HM.filter (filterHeavy vssCert) currentMap) heavyDelegations (HM.elems vssCerts)
-        let filtered2        = List.foldl' (\currentMap delCert -> HM.filter (filterVss delCert) currentMap) vssCerts (HM.elems heavyDelegations)
-        pure $ if (filtered1 == mempty) && (filtered2 == mempty)
-            then CheckPassed
-            else CheckFailed $ unlines [ "Filtered1 => " ++ show filtered1
-                                       , "Filtered2 => " ++ show filtered2
-                                       ]
-  where
-    filterHeavy :: VssCertificate -> DelegationCertificate -> Bool
-    filterHeavy VssCertificate{..} DelegationCertificate{..} = vss_signingKey /= dc_delegatePk
-
-    filterVss :: DelegationCertificate -> VssCertificate -> Bool
-    filterVss DelegationCertificate{..} VssCertificate{..} = dc_delegatePk /= vss_signingKey
 
 -- | The set of stakeholders that we expect to be in the genesis data
 expectedStakeholderSet :: Auditor (HS.HashSet T.Text)

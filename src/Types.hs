@@ -22,8 +22,8 @@ data CLI = CLI
 newtype Auditor a = Auditor { runAuditor :: ReaderT CLI IO a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadReader CLI)
 
-type GenesisWStakeholders      = JSON.Object
-type GenesisDelegation         = JSON.Value
+type GenesisWStakeholders      = JSON.Object -- TODO: check what happens to duplicates
+type GenesisDelegation         = JSON.Object
 type Timestamp                 = JSON.Value
 type GenesisVssCertificatesMap = JSON.Value
 type GenesisNonAvvmBalances    = JSON.Value

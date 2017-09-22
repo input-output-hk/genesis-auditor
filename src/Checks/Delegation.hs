@@ -17,12 +17,19 @@ import Types
 delegationChecks :: [Check]
 delegationChecks =
     [ delegationCheckStakeholdersMatch
+    , delegationCheckAddressCorrespondence
     ]
 
 delegationCheckStakeholdersMatch :: Check
 delegationCheckStakeholdersMatch = Check
     { checkName = "delegation-stakeholders-match"
     , runCheck = doCheckStakeholdersMatch
+    }
+
+delegationCheckAddressCorrespondence :: Check
+delegationCheckAddressCorrespondence = Check
+    { checkName = "delegation-address-correspondence"
+    , runCheck = doCheckAddressCorrespondence
     }
 
 -- | Checks that the stakeholders in the genesis data are exactly those that we expect
@@ -38,6 +45,18 @@ doCheckStakeholdersMatch gdata = do
                                    ,"  unexpected stakeholders: " <> show (actualStakeholders `HS.difference` expectedStakeholders)
                                    ]
 
+-- | Checks that every stakeholder delegates, and that only stakeholders delegate
+doCheckAddressCorrespondence :: GenesisData -> Auditor CheckStatus
+doCheckAddressCorrespondence gdata = do
+    let actualStakeholders = actualStakeholderSet gdata
+    let delegationAddresses = HS.fromMap . HM.map (const ()) . gdHeavyDelegation $ gdata
+    pure $ if actualStakeholders == delegationAddresses
+        then CheckPassed
+        else CheckFailed $ unlines [ "Mismatch between stakeholders and delegation certificates"
+                                   , "  No delegation for: " <> show (actualStakeholders `HS.difference` delegationAddresses)
+                                   , "  Unexpected delegation: " <> show (delegationAddresses `HS.difference` actualStakeholders)
+                                   ]
+
 -- | The set of stakeholders that we expect to be in the genesis data
 expectedStakeholderSet :: Auditor (HS.HashSet T.Text)
 expectedStakeholderSet = do
@@ -47,4 +66,4 @@ expectedStakeholderSet = do
 
 -- | The set of stakeholders in the genesis data
 actualStakeholderSet :: GenesisData -> HS.HashSet T.Text
-actualStakeholderSet gdata = HS.fromMap . HM.map (const ()) $gdBootStakeholders gdata
+actualStakeholderSet gdata = HS.fromMap . HM.map (const ()) $ gdBootStakeholders gdata

@@ -1,11 +1,14 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
 {-# LANGUAGE OverloadedStrings #-}
+{-# LANGUAGE TemplateHaskell #-}
 module Types where
 
+import qualified Data.HashMap.Lazy as HM
 import Data.Aeson as JSON
 import Data.Aeson.Types
-import Data.Text (Text)
+import Data.Aeson.TH
 import Control.Monad.Trans.Reader
+import Data.Text (Text)
 import Control.Monad.IO.Class
 import Control.Monad.Reader
 import Data.ByteString
@@ -22,16 +25,34 @@ data CLI = CLI
 newtype Auditor a = Auditor { runAuditor :: ReaderT CLI IO a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadReader CLI)
 
+data DelegationCertificate = DelegationCertificate {
+    dc_cert       :: !Text
+  , dc_delegatePk :: !Text
+  , dc_issuerPk   :: !Text
+  , dc_omega      :: !Int
+  } deriving (Show, Eq)
+
+deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 3 } ''DelegationCertificate
+
+data VssCertificate = VssCertificate {
+    vss_expiryEpoch :: !Int
+  , vss_signature   :: !Text
+  , vss_vssKey      :: !Text
+  , vss_signingKey  :: !Text
+  } deriving (Show, Eq)
+
+deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 4 } ''VssCertificate
+
 type GenesisWStakeholders      = JSON.Object -- TODO: check what happens to duplicates
-type GenesisDelegation         = JSON.Object
 type Timestamp                 = JSON.Value
-type GenesisVssCertificatesMap = JSON.Value
 type GenesisNonAvvmBalances    = JSON.Value
 type BlockVersionData          = JSON.Value
 type ProtocolConstants         = JSON.Value
 type GenesisAvvmBalances       = JSON.Value
 type SharedSeed                = JSON.Value
-
+type AddressHash               = Text
+type GenesisDelegation         = HM.HashMap AddressHash DelegationCertificate
+type VssCerts                  = HM.HashMap AddressHash VssCertificate
 
 data GenesisData = GenesisData
     { gdAvvmDistr        :: GenesisAvvmBalances
@@ -42,7 +63,7 @@ data GenesisData = GenesisData
     , gdNonAvvmBalances  :: GenesisNonAvvmBalances
     , gdProtocolConsts   :: ProtocolConstants
     , gdStartTime        :: Timestamp
-    , gdVssCerts         :: GenesisVssCertificatesMap
+    , gdVssCerts         :: VssCerts
     } deriving (Show, Eq)
 
 instance FromJSON GenesisData where

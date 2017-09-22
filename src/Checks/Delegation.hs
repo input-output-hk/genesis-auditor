@@ -20,6 +20,7 @@ delegationChecks =
     [ delegationCheckStakeholdersMatch
     , delegationCheckAddressCorrespondence
     , delegationCheckVssCorrespondence
+    , delegationLengthConsistency
     ]
 
 delegationCheckStakeholdersMatch :: Check
@@ -38,6 +39,13 @@ delegationCheckVssCorrespondence :: Check
 delegationCheckVssCorrespondence = Check
     { checkName = "delegation-vss-correspondence"
     , runCheck = doCheckVssCorrespondence
+    }
+
+
+delegationLengthConsistency :: Check
+delegationLengthConsistency = Check
+    { checkName = "delegation-length-consistency"
+    , runCheck = doDelegationLengthConsistency
     }
 
 -- | Checks that the stakeholders in the genesis data are exactly those that we expect
@@ -76,6 +84,19 @@ doCheckVssCorrespondence gdata = do
                                    , "  No signing keyfor: " <> show (HS.toList $ delegatePks `HS.difference` signingKeys)
                                    , "  Unexpected signing keys: " <> show (HS.toList $ signingKeys `HS.difference` delegatePks)
                                    ]
+
+-- | Check that the number of stakeholder addresses and vss certificates is the same.
+--
+-- In particular, this test fails if more than one stakeholder
+-- delegate to the same core node
+doDelegationLengthConsistency :: GenesisData -> Auditor CheckStatus
+doDelegationLengthConsistency GenesisData{..} =
+    pure $ if HM.size gdBootStakeholders == HM.size gdVssCerts
+           then CheckPassed
+           else CheckFailed $ "Difference in the number of stakeholders and vss certificates. "
+                <> show (HM.size gdBootStakeholders)
+                <> " stakeholders, but "
+                <> show (HM.size gdVssCerts)
 
 -- | The set of stakeholders that we expect to be in the genesis data
 expectedStakeholderSet :: Auditor (HS.HashSet T.Text)

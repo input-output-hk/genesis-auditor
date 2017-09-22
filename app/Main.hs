@@ -27,4 +27,4 @@ main = do
 renderChecks :: [(CheckName, CheckStatus)] -> Auditor ()
 renderChecks allChecks = forM_ allChecks $ \(cn, status) -> liftIO $ do
   putStr $ cn <> " -> "
-  putStrLn (show status)
+  printCheckStatus status

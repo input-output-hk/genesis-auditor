@@ -9,8 +9,8 @@ import Control.Monad.Reader
 import qualified Data.HashMap.Lazy as HM
 import qualified Data.HashSet as HS
 import Data.Monoid
-import Data.Text (Text)
-
+import qualified Data.Text as T
+import qualified Data.Text.IO as T
 import Checks.Types
 import Types
 
@@ -39,11 +39,12 @@ doCheckStakeholdersMatch gdata = do
                                    ]
 
 -- | The set of stakeholders that we expect to be in the genesis data
-expectedStakeholderSet :: Auditor (HS.HashSet Text)
+expectedStakeholderSet :: Auditor (HS.HashSet T.Text)
 expectedStakeholderSet = do
     CLI{..} <- ask
+    stakeholders <- T.lines <$> liftIO (T.readFile stakeholdersFile)
     pure . HS.fromList $ stakeholders
 
 -- | The set of stakeholders in the genesis data
-actualStakeholderSet :: GenesisData -> HS.HashSet Text
+actualStakeholderSet :: GenesisData -> HS.HashSet T.Text
 actualStakeholderSet gdata = HS.fromMap . HM.map (const ()) $gdBootStakeholders gdata

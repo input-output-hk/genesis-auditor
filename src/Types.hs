@@ -11,25 +11,26 @@ import Control.Monad.Reader
 import Data.ByteString
 
 data CLI = CLI
-  { expectedHash :: ByteString
-  -- | All the stakeholders that are supposed to be mentioned (and
-  -- have delegated their stake) in the genesis file
-  , stakeholders :: [Text]
-  , genesisFile  :: FilePath
+  { expectedHash     :: ByteString
+  -- | Path to a file containing all the stakeholders that are
+  -- supposed to be mentioned (and have delegated their stake) in the
+  -- genesis file
+  , stakeholdersFile :: FilePath
+  , genesisFile      :: FilePath
   } deriving Show
 
 newtype Auditor a = Auditor { runAuditor :: ReaderT CLI IO a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadReader CLI)
 
-type GenesisWStakeholders = JSON.Object
-type GenesisDelegation = JSON.Value
-type Timestamp = JSON.Value
+type GenesisWStakeholders      = JSON.Object
+type GenesisDelegation         = JSON.Value
+type Timestamp                 = JSON.Value
 type GenesisVssCertificatesMap = JSON.Value
-type GenesisNonAvvmBalances = JSON.Value
-type BlockVersionData = JSON.Value
-type ProtocolConstants = JSON.Value
-type GenesisAvvmBalances = JSON.Value
-type SharedSeed = JSON.Value
+type GenesisNonAvvmBalances    = JSON.Value
+type BlockVersionData          = JSON.Value
+type ProtocolConstants         = JSON.Value
+type GenesisAvvmBalances       = JSON.Value
+type SharedSeed                = JSON.Value
 
 
 data GenesisData = GenesisData

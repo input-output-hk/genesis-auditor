@@ -12,9 +12,7 @@ import Crypto.Hash
 parseCLI :: Parser CLI
 parseCLI = CLI
       <$> parserHash
-      <*> many (T.pack <$> strOption (long "stakeholder"
-                                      <> metavar "STAKEHOLDER_ID"
-                                     ))
+      <*> parseStakeholdersFile
       <*> parseGenesisFile
 
 parserHash :: Parser ByteString
@@ -27,6 +25,12 @@ parserHash = C8.pack <$> strOption
     readDigest x = case digestFromByteString (toS x :: ByteString) of
       Nothing -> Left $ "Invalid Digest: " <> x
       Just d -> Right d
+
+parseStakeholdersFile :: Parser FilePath
+parseStakeholdersFile = strOption
+          ( short 's'
+         <> metavar "PATH-TO-STAKEHOLDERS-FILE"
+         <> help "The path to a file containing the expected stakeholders, one per line." )
 
 parseGenesisFile :: Parser FilePath
 parseGenesisFile = strOption

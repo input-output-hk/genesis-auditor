@@ -5,6 +5,7 @@ module Checks (
   , performChecks
   ) where
 
+import Checks.Balance as Exports
 import Checks.CanonicalJSON as Exports
 import Checks.Delegation as Exports
 import Checks.VssCerts as Exports
@@ -18,6 +19,7 @@ performChecks genData = mapM doCheck $
                         , vssCerts
                         ]
                         ++ delegationChecks
+                        ++ balanceChecks
   where
     doCheck :: Check -> Auditor (CheckName, CheckStatus)
     doCheck Check{..} = (checkName,) <$> runCheck genData

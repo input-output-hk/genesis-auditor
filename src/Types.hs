@@ -45,7 +45,7 @@ deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 4 } ''VssCerti
 
 type GenesisWStakeholders      = JSON.Object -- TODO: check what happens to duplicates
 type Timestamp                 = JSON.Value
-type GenesisNonAvvmBalances    = JSON.Value
+type GenesisNonAvvmBalances    = JSON.Object
 type BlockVersionData          = JSON.Value
 type ProtocolConstants         = JSON.Value
 type GenesisAvvmBalances       = JSON.Value

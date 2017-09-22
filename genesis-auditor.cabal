@@ -19,7 +19,8 @@ library
                        Types
                        CLI
                        Checks
-  other-modules:       Checks.CanonicalJSON
+  other-modules:       Checks.Balance
+                       Checks.CanonicalJSON
                        Checks.Delegation
                        Checks.VssCerts
                        Checks.Types

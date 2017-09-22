@@ -29,7 +29,7 @@ delegation-vss-correspondence -> Check Passed
 The asserts the following properties of the genesis data:
 
 - [ ] The `avvmDistr` matches the output from the AVVM
-- [ ] the `nonAvvmBalances` is empty
+- [x] the `nonAvvmBalances` is empty
 - [x] The stakeholder addresses in the json file are exactly those provided in the stakeholders file
 - [x] For each stakeholder address, there is a delegation certificate.
 - [x] There are no delegation certificates that do not belong to one of the stakeholders

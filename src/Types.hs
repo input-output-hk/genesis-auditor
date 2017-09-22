@@ -4,6 +4,7 @@ module Types where
 
 import Data.Aeson as JSON
 import Data.Aeson.Types
+import Data.Text (Text)
 import Control.Monad.Trans.Reader
 import Control.Monad.IO.Class
 import Control.Monad.Reader
@@ -11,13 +12,16 @@ import Data.ByteString
 
 data CLI = CLI
   { expectedHash :: ByteString
+  -- | All the stakeholders that are supposed to be mentioned (and
+  -- have delegated their stake) in the genesis file
+  , stakeholders :: [Text]
   , genesisFile  :: FilePath
   } deriving Show
 
 newtype Auditor a = Auditor { runAuditor :: ReaderT CLI IO a }
   deriving (Functor, Applicative, Monad, MonadIO, MonadReader CLI)
 
-type GenesisWStakeholders = JSON.Value
+type GenesisWStakeholders = JSON.Object
 type GenesisDelegation = JSON.Value
 type Timestamp = JSON.Value
 type GenesisVssCertificatesMap = JSON.Value

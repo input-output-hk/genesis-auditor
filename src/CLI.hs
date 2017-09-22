@@ -5,12 +5,16 @@ import Options.Applicative
 import Data.ByteString.Char8 as C8
 import Data.String.Conv
 import Data.Monoid
+import qualified Data.Text as T
 import Types
 import Crypto.Hash
 
 parseCLI :: Parser CLI
 parseCLI = CLI
       <$> parserHash
+      <*> many (T.pack <$> strOption (long "stakeholder"
+                                      <> metavar "STAKEHOLDER_ID"
+                                     ))
       <*> parseGenesisFile
 
 parserHash :: Parser ByteString

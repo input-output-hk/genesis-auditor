@@ -23,3 +23,18 @@ delegation-stakeholders-match -> Check Failed: Expecting stakeholders fromList [
 delegation-address-correspondence -> Check Passed
 delegation-vss-correspondence -> Check Passed
 ```
+
+# Implemented Checks
+
+The asserts the following properties of the genesis data:
+
+- [ ] The `avvmDistr` matches the output from the AVVM
+- [ ] the `nonAvvmBalances` is empty
+- [x] The stakeholder addresses in the json file are exactly those provided in the stakeholders file
+- [x] For each stakeholder address, there is a delegation certificate.
+- [x] There are no delegation certificates that do not belong to one of the stakeholders
+- [x] Each of the `delegatePk` from the delegation certificates corresponds to a `signingKey` in a vss certificate
+- [x] There are no vss certificates where the signing key is not used as a `delegatePk` in one of the delegation certificates
+- [ ] Converting to canonical JSON form and taking the `blake2b_256_sha` results in the specified hash.
+- [ ] Consistency checks on the `vssCerts`
+- [ ] Check that there are no duplicate JSON entries in the input

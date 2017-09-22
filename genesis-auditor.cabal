@@ -30,6 +30,8 @@ library
                        , ansi-terminal
                        , canonical-json
                        , cryptonite
+                       , hashable
+                       , fail
                        , memory
                        , optparse-applicative
                        , mtl

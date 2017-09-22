@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Types where
@@ -7,6 +8,7 @@ import qualified Data.HashMap.Lazy as HM
 import Data.Aeson as JSON
 import Data.Aeson.Types
 import Data.Aeson.TH
+import           Text.JSON.Canonical        (Int54(..))
 import Control.Monad.Trans.Reader
 import Data.Text (Text)
 import Control.Monad.IO.Class
@@ -46,8 +48,8 @@ data VssCertificate = VssCertificate {
 
 deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 4 } ''VssCertificate
 
-type GenesisWStakeholders      = JSON.Object -- TODO: check what happens to duplicates
-type Timestamp                 = JSON.Value
+type GenesisWStakeholders      = HM.HashMap Text Text
+type Timestamp                 = Int54
 type GenesisNonAvvmBalances    = JSON.Object
 type BlockVersionData          = JSON.Value
 type ProtocolConstants         = JSON.Value
@@ -68,6 +70,12 @@ data GenesisData = GenesisData
     , gdStartTime        :: Timestamp
     , gdVssCerts         :: VssCerts
     } deriving (Show, Eq)
+
+instance FromJSON Timestamp where
+  parseJSON (Number n) =
+    let toInt64 = read . show  -- Probably unsound.
+        in return $ toInt64 n
+  parseJSON x = typeMismatch "Timestamp" x
 
 instance FromJSON GenesisData where
   parseJSON (Object o) =

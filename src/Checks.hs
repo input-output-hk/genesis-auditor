@@ -9,6 +9,7 @@ import Checks.Balance as Exports
 import Checks.CanonicalJSON as Exports
 import Checks.Delegation as Exports
 import Checks.VssCerts as Exports
+import Checks.DuplicateKeys as Exports
 import Checks.Types as Exports
 import Types
 
@@ -17,6 +18,7 @@ performChecks :: GenesisData -> Auditor [(CheckName, CheckStatus)]
 performChecks genData = mapM doCheck $
                         [canonicalJsonCheck
                         , vssCerts
+                        , duplicateKeysCheck
                         ]
                         ++ delegationChecks
                         ++ balanceChecks

@@ -5,6 +5,7 @@ module Checks.DuplicateKeys
     ) where
 
 
+import Data.String.Conv
 import Control.Applicative.Lift
 import Control.Monad.Reader
 import Data.Functor.Constant
@@ -16,6 +17,7 @@ import Types
 
 import qualified Text.JSON.String as JSON
 import qualified Text.JSON as JSON
+import qualified Text.Pretty.Simple as PP
 
 duplicateKeysCheck :: Check
 duplicateKeysCheck = Check
@@ -46,7 +48,7 @@ doCheckDuplicateKeys _ = do
                                       ]
       pure $ case finalResult of
         Right    _ -> CheckPassed
-        Left  errs -> CheckFailed (show errs)
+        Left  errs -> CheckFailed (toS $ PP.pShowNoColor errs)
 
 -- | "Focus" on a particular key on the JSON, applying a function to the value, failing is the type mismatch.
 withObject :: String -> (JSON.JSValue -> Either [CheckStatus] ()) -> JSON.JSValue -> Either [CheckStatus] ()

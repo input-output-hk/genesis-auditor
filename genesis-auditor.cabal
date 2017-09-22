@@ -33,6 +33,7 @@ library
                        , memory
                        , optparse-applicative
                        , mtl
+                       , pretty-simple
                        , transformers
                        , string-conv
                        , bytestring

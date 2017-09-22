@@ -16,10 +16,10 @@ import Types
 -- | Runs all the self-contained checks, reporting the final outcome.
 performChecks :: GenesisData -> Auditor [(CheckName, CheckStatus)]
 performChecks genData = mapM doCheck $
-                        [canonicalJsonCheck
-                        , vssCerts
+                        [ canonicalJsonCheck
                         , duplicateKeysCheck
                         ]
+                        ++ vssCertsCheck
                         ++ delegationChecks
                         ++ balanceChecks
   where

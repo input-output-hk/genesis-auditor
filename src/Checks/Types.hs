@@ -22,7 +22,8 @@ printCheckStatus CheckPassed = do
   ANSI.setSGR [ANSI.Reset]
 printCheckStatus (CheckFailed reason) = do
   ANSI.setSGR [ANSI.SetColor ANSI.Foreground ANSI.Dull ANSI.Red]
-  putStrLn $ "Check Failed: " ++ reason
+  putStrLn $ "Check Failed!"
+  putStrLn reason
   ANSI.setSGR [ANSI.Reset]
 
 data Check = Check { checkName :: String

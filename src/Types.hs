@@ -19,6 +19,9 @@ data CLI = CLI
   -- supposed to be mentioned (and have delegated their stake) in the
   -- genesis file
   , stakeholdersFile :: FilePath
+  -- | Path to a file containing all the VSS certificates that are
+  -- supposed to be mentioned in the genesis file, one per core node.
+  , vssCertsFile     :: FilePath
   , genesisFile      :: FilePath
   } deriving Show
 

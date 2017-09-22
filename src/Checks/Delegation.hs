@@ -8,7 +8,6 @@ module Checks.Delegation
 import Control.Monad.Reader
 import qualified Data.HashMap.Lazy as HM
 import qualified Data.HashSet as HS
-import qualified Data.List as List
 import Data.Monoid
 import qualified Data.Text as T
 import qualified Data.Text.IO as T

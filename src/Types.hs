@@ -8,7 +8,9 @@ import qualified Data.HashMap.Lazy as HM
 import Data.Aeson as JSON
 import Data.Aeson.Types
 import Data.Aeson.TH
-import           Text.JSON.Canonical        (Int54(..))
+import qualified Data.Scientific as Scientific
+import           Text.JSON.Canonical        (Int54)
+import Data.Int (Int64)
 import Control.Monad.Trans.Reader
 import Data.Text (Text)
 import Control.Monad.IO.Class
@@ -24,6 +26,7 @@ data CLI = CLI
   -- | Path to a file containing all the VSS certificates that are
   -- supposed to be mentioned in the genesis file, one per core node.
   , vssCertsFile     :: FilePath
+  , avvmFile         :: FilePath
   , genesisFile      :: FilePath
   } deriving Show
 
@@ -48,16 +51,25 @@ data VssCertificate = VssCertificate {
 
 deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 4 } ''VssCertificate
 
-type GenesisWStakeholders      = HM.HashMap Text Text
+type GenesisWStakeholders      = JSON.Object
 type Timestamp                 = Int54
 type GenesisNonAvvmBalances    = JSON.Object
-type BlockVersionData          = JSON.Value
-type ProtocolConstants         = JSON.Value
-type GenesisAvvmBalances       = JSON.Value
-type SharedSeed                = JSON.Value
+type BlockVersionData          = JSON.Object
+type ProtocolConstants         = JSON.Object
+type GenesisAvvmBalances       = HM.HashMap Text Text
+type SharedSeed                = JSON.Object
 type AddressHash               = Text
 type GenesisDelegation         = HM.HashMap AddressHash DelegationCertificate
 type VssCerts                  = HM.HashMap AddressHash VssCertificate
+
+data AvvmEntry = AvvmEntry
+    { ae_vendingAddress :: Text
+    , ae_ada :: Int64
+    } deriving (Show, Eq)
+
+deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 3 } ''AvvmEntry
+
+type AvvmLedger = [AvvmEntry]
 
 data GenesisData = GenesisData
     { gdAvvmDistr        :: GenesisAvvmBalances
@@ -73,7 +85,7 @@ data GenesisData = GenesisData
 
 instance FromJSON Timestamp where
   parseJSON (Number n) =
-    let toInt64 = read . show  -- Probably unsound.
+    let toInt64 = read . show . Scientific.coefficient . Scientific.normalize
         in return $ toInt64 n
   parseJSON x = typeMismatch "Timestamp" x
 

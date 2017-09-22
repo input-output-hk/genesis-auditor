@@ -14,6 +14,7 @@ parseCLI = CLI
       <$> parserHash
       <*> parseStakeholdersFile
       <*> parseVssFile
+      <*> parseAvvmFile
       <*> parseGenesisFile
 
 parserHash :: Parser ByteString
@@ -38,6 +39,12 @@ parseVssFile = strOption
           ( short 'c'
          <> metavar "PATH-TO-VSS-CERTS-FILE"
          <> help "The path to a file containing the expected vss certificates, one per line." )
+
+parseAvvmFile :: Parser FilePath
+parseAvvmFile = strOption
+          ( short 'a'
+         <> metavar "PATH-TO-AVVM-OUTPUT-FILE"
+         <> help "The path to a file containing the expected AVVM stake distribution (JSON)." )
 
 parseGenesisFile :: Parser FilePath
 parseGenesisFile = strOption

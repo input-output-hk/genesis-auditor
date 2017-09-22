@@ -11,6 +11,8 @@ module Checks.CanonicalJSON
 import Data.String.Conv
 import Text.JSON.Canonical
 import qualified Data.Aeson as Aeson
+import qualified Data.Vector as V
+import qualified Data.Text as T
 import Data.Maybe
 import Control.Monad.Fail (MonadFail)
 import Data.HashMap.Lazy as HM
@@ -69,6 +71,15 @@ instance (Monad m, Applicative m, MonadFail m) => ReportSchemaErrors m where
         , fromMaybe "" got
         ]
 
+instance Monad m => ToJSON m GenesisAvvmBalances where
+    toJSON hm = toJSON (hm :: HM.HashMap T.Text T.Text)
+
+instance Monad m => ToJSON m VssCerts where
+    toJSON hm = toJSON (hm :: HM.HashMap T.Text VssCertificate)
+
+instance Monad m => ToJSON m GenesisDelegation where
+    toJSON hm = toJSON (hm :: HM.HashMap T.Text DelegationCertificate)
+
 instance Monad m => ToJSON m Integer where
     toJSON = pure . JSString . show
 
@@ -86,15 +97,23 @@ instance (ReportSchemaErrors m, Eq k, Hashable k, FromObjectKey m k, FromJSON m 
         knownKeys Nothing _  = Nothing
         knownKeys (Just k) a = Just (k, a)
 
+instance (ReportSchemaErrors m) => FromJSON m Aeson.Value where
+  fromJSON (JSObject hm) = return (Aeson.Object HM.empty) -- placeholder
+  fromJSON (JSNull    )  = return Aeson.Null
+  fromJSON (JSBool   b)  = return (Aeson.Bool b)
+  fromJSON (JSNum    n)  = return (Aeson.Number 0) -- placeholder
+  fromJSON (JSString s)  = return (Aeson.String (toS s))
+  fromJSON (JSArray  a)  = Aeson.Array . V.fromList <$> mapM fromJSON a
+
 instance (ReportSchemaErrors m) => FromJSON m GenesisData where
     fromJSON obj = do
         gdBootStakeholders <- fromJSField obj "bootStakeholders"
         gdHeavyDelegation <- fromJSField obj "heavyDelegation"
-        gdStartTime <- fromJSField obj "startTime"
         gdVssCerts <- fromJSField obj "vssCerts"
+        gdAvvmDistr <- fromJSField obj "avvmDistr"
+        gdStartTime <- fromJSField obj "startTime"
         gdNonAvvmBalances <- fromJSField obj "nonAvvmBalances"
         gdBlockVersionData <- fromJSField obj "blockVersionData"
         gdProtocolConsts <- fromJSField obj "protocolConsts"
-        gdAvvmDistr <- fromJSField obj "avvmDistr"
         gdFtsSeed <- fromJSField obj "ftsSeed"
         return GenesisData {..}

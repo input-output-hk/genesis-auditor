@@ -22,30 +22,29 @@ import Control.Monad.Fail (MonadFail)
 import Data.HashMap.Lazy as HM
 import Data.Hashable
 import qualified Data.ByteString as BS
+import qualified Data.List as List
 import qualified Data.ByteString.Char8 as C8
 import Data.Monoid
 import Checks.Types
 import Types
 import Control.Monad.Reader
-import Control.Monad.Identity
 import Crypto.Hash as Crypto
 
 
 canonicalJsonChecks :: [Check]
 canonicalJsonChecks = [
-    internalConsistencyCheck
-  , hashCorrespondenceCheck
+    canonicalJsonCheck
   ]
 
 -- | Checks this is a valid canonical JSON and that the input hash corresponds.
-internalConsistencyCheck :: Check
-internalConsistencyCheck = Check {
-    checkName = "is-canonical-json-internal-roundtrip-check"
-  , runCheck  = doInternalCheck
+canonicalJsonCheck :: Check
+canonicalJsonCheck = Check {
+    checkName = "is-canonical-json-check"
+  , runCheck  = doCheck
   }
 
-doInternalCheck :: GenesisData -> Auditor CheckStatus
-doInternalCheck _ = do
+doCheck :: GenesisData -> Auditor CheckStatus
+doCheck _ = do
   CLI{..} <- ask
   -- Parse the raw JSON
   canonicalJsonE <- parseCanonicalJSON . toS <$> liftIO (BS.readFile genesisFile)
@@ -56,21 +55,6 @@ doInternalCheck _ = do
       return $ case C8.unpack expectedHash == show canonicalHash of
         True  -> CheckPassed
         False -> CheckFailed $ "Expecting Hash " <> show expectedHash <> " but found hash " <> show canonicalHash
-
-hashCorrespondenceCheck :: Check
-hashCorrespondenceCheck = Check {
-    checkName = "is-canonical-json-check"
-  , runCheck  = doHashCorrespondenceCheck
-  }
-
-doHashCorrespondenceCheck:: GenesisData -> Auditor CheckStatus
-doHashCorrespondenceCheck gData = do
-  CLI{..} <- ask
-  let rawBytes   = renderCanonicalJSON . runIdentity . toJSON $ gData
-  let actualHash = Crypto.hashWith @BS.ByteString Blake2b_256 (toS rawBytes)
-  return $ case C8.unpack expectedHash == show actualHash of
-    True  -> CheckPassed
-    False -> CheckFailed $ "Expecting Hash " <> show expectedHash <> " but found hash " <> show actualHash
 
 instance Monad m => ToJSON m GenesisData where
     toJSON GenesisData {..} =
@@ -119,11 +103,11 @@ instance Monad m => ToJSON m VssCertificate where
       ("expiryEpoch", toJSON vss_expiryEpoch)
     , ("signature", toJSON vss_signature)
     , ("vssKey", toJSON vss_vssKey)
-    , ("signingKey ", toJSON vss_signingKey)
+    , ("signingKey", toJSON vss_signingKey)
     ]
 
-instance (Monad m, ToObjectKey m k, ToJSON m a) => ToJSON m (HashMap k a) where
-    toJSON = fmap JSObject . mapM aux . HM.toList
+instance (Monad m, ToObjectKey m k, Ord k, ToJSON m a) => ToJSON m (HashMap k a) where
+    toJSON = fmap JSObject . mapM aux . List.sortOn fst . HM.toList
       where
         aux (k, a) = (,) <$> toObjectKey k <*> toJSON a
 
@@ -157,7 +141,7 @@ instance (ReportSchemaErrors m) => FromJSON m Aeson.Value where
           return $ HM.fromList x
     converted <- convertHM hm
     return (Aeson.Object converted)
-  fromJSON (JSNull    )  = return Aeson.Null
+  fromJSON JSNull        = return Aeson.Null
   fromJSON (JSBool   b)  = return (Aeson.Bool b)
   fromJSON (JSNum int54) = return (Aeson.toJSON $ int54ToInt64 int54)
   fromJSON (JSString s)  = return (Aeson.String (toS s))

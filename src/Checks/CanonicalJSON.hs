@@ -6,7 +6,7 @@
 {-# LANGUAGE TypeApplications #-}
 {-# LANGUAGE MultiParamTypeClasses #-}
 module Checks.CanonicalJSON
-  ( canonicalJsonCheck
+  ( canonicalJsonChecks
   ) where
 
 import Data.Int (Int64)
@@ -15,7 +15,6 @@ import Text.JSON.Canonical
 import Text.JSON.Canonical.Types
 import qualified Data.Scientific as Scientific
 import qualified Data.Aeson as Aeson
-import qualified Data.Aeson.Types as Aeson
 import qualified Data.Vector as V
 import qualified Data.Text as T
 import Data.Maybe
@@ -31,15 +30,22 @@ import Control.Monad.Reader
 import Control.Monad.Identity
 import Crypto.Hash as Crypto
 
+
+canonicalJsonChecks :: [Check]
+canonicalJsonChecks = [
+    internalConsistencyCheck
+  , hashCorrespondenceCheck
+  ]
+
 -- | Checks this is a valid canonical JSON and that the input hash corresponds.
-canonicalJsonCheck :: Check
-canonicalJsonCheck = Check {
-    checkName = "is-canonical-json-check"
-  , runCheck  = doCheck
+internalConsistencyCheck :: Check
+internalConsistencyCheck = Check {
+    checkName = "is-canonical-json-internal-roundtrip-check"
+  , runCheck  = doInternalCheck
   }
 
-doCheck :: GenesisData -> Auditor CheckStatus
-doCheck gData = do
+doInternalCheck :: GenesisData -> Auditor CheckStatus
+doInternalCheck _ = do
   CLI{..} <- ask
   -- Parse the raw JSON
   canonicalJsonE <- parseCanonicalJSON . toS <$> liftIO (BS.readFile genesisFile)
@@ -47,12 +53,24 @@ doCheck gData = do
     Left e   -> pure $ CheckFailed (show e)
     Right cj ->  do
       let canonicalHash = Crypto.hashWith @BS.ByteString Blake2b_256 (toS $ renderCanonicalJSON cj)
-      -- Second roundtrip
-      let rawBytes   = renderCanonicalJSON . runIdentity . toJSON $ gData
-      let actualHash = Crypto.hashWith @BS.ByteString Blake2b_256 (toS rawBytes)
-      return $ case C8.unpack expectedHash == show canonicalHash && C8.unpack expectedHash == show actualHash of
+      return $ case C8.unpack expectedHash == show canonicalHash of
         True  -> CheckPassed
         False -> CheckFailed $ "Expecting Hash " <> show expectedHash <> " but found hash " <> show canonicalHash
+
+hashCorrespondenceCheck :: Check
+hashCorrespondenceCheck = Check {
+    checkName = "is-canonical-json-check"
+  , runCheck  = doHashCorrespondenceCheck
+  }
+
+doHashCorrespondenceCheck:: GenesisData -> Auditor CheckStatus
+doHashCorrespondenceCheck gData = do
+  CLI{..} <- ask
+  let rawBytes   = renderCanonicalJSON . runIdentity . toJSON $ gData
+  let actualHash = Crypto.hashWith @BS.ByteString Blake2b_256 (toS rawBytes)
+  return $ case C8.unpack expectedHash == show actualHash of
+    True  -> CheckPassed
+    False -> CheckFailed $ "Expecting Hash " <> show expectedHash <> " but found hash " <> show actualHash
 
 instance Monad m => ToJSON m GenesisData where
     toJSON GenesisData {..} =
@@ -76,20 +94,47 @@ instance (Monad m, Applicative m, MonadFail m) => ReportSchemaErrors m where
         , fromMaybe "" got
         ]
 
-instance Monad m => ToJSON m GenesisAvvmBalances where
-    toJSON hm = toJSON (hm :: HM.HashMap T.Text T.Text)
-
-instance Monad m => ToJSON m VssCerts where
-    toJSON hm = toJSON (hm :: HM.HashMap T.Text VssCertificate)
-
-instance Monad m => ToJSON m GenesisDelegation where
-    toJSON hm = toJSON (hm :: HM.HashMap T.Text DelegationCertificate)
 
 instance Monad m => ToJSON m Integer where
     toJSON = pure . JSString . show
 
-instance Monad m => ToJSON m Aeson.Object where
-    toJSON o = toJSON o
+instance Monad m => ToJSON m Aeson.Value where
+  toJSON (Aeson.Object o) = toJSON o
+  toJSON (Aeson.Array a)  = toJSON . V.toList $ a
+  toJSON (Aeson.String s) = pure $ JSString (toS s)
+  toJSON (Aeson.Number n) = pure $ JSNum (fromIntegral $ Scientific.coefficient n)
+  toJSON (Aeson.Bool b)   = pure $ JSBool b
+  toJSON Aeson.Null       = pure JSNull
+
+instance Monad m => ToJSON m DelegationCertificate where
+  toJSON DelegationCertificate{..} = mkObject [
+      ("cert", toJSON dc_cert)
+    , ("delegatePk", toJSON dc_delegatePk)
+    , ("issuerPk", toJSON dc_issuerPk)
+    , ("omega", toJSON dc_omega)
+    ]
+
+instance Monad m => ToJSON m VssCertificate where
+  toJSON VssCertificate{..} = mkObject [
+      ("expiryEpoch", toJSON vss_expiryEpoch)
+    , ("signature", toJSON vss_signature)
+    , ("vssKey", toJSON vss_vssKey)
+    , ("signingKey ", toJSON vss_signingKey)
+    ]
+
+instance (Monad m, ToObjectKey m k, ToJSON m a) => ToJSON m (HashMap k a) where
+    toJSON = fmap JSObject . mapM aux . HM.toList
+      where
+        aux (k, a) = (,) <$> toObjectKey k <*> toJSON a
+
+instance Monad m => ToObjectKey m T.Text where
+    toObjectKey = return . toS
+
+instance Monad m => ToJSON m Int64 where
+    toJSON = return . JSNum . fromIntegral
+
+instance Monad m => ToJSON m T.Text where
+    toJSON = return . JSString . toS
 
 instance Monad m => FromJSON m Int64 where
     fromJSON (JSNum int54) = pure . int54ToInt64 $ int54

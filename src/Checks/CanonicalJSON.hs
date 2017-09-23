@@ -9,6 +9,7 @@ module Checks.CanonicalJSON
   ( canonicalJsonCheck
   ) where
 
+import Data.Int (Int64)
 import Data.String.Conv
 import Text.JSON.Canonical
 import Text.JSON.Canonical.Types
@@ -90,6 +91,9 @@ instance Monad m => ToJSON m Integer where
 instance Monad m => ToJSON m Aeson.Object where
     toJSON o = toJSON o
 
+instance Monad m => FromJSON m Int64 where
+    fromJSON (JSNum int54) = pure . int54ToInt64 $ int54
+
 instance (ReportSchemaErrors m, Eq k, Hashable k, FromObjectKey m k, FromJSON m a) =>
          FromJSON m (HashMap k a) where
     fromJSON enc = do
@@ -119,10 +123,23 @@ instance (ReportSchemaErrors m) => FromJSON m T.Text where
   fromJSON _ = fail "fromJSON T.Text: type mismatch"
 
 instance (ReportSchemaErrors m) => FromJSON m VssCertificate where
-  fromJSON _ = fail "fromJSON VssCertificate: todo"
+  fromJSON o@(JSObject _) =
+    VssCertificate <$> fromJSField o "expiryEpoch"
+                   <*> fromJSField o "signature"
+                   <*> fromJSField o "vssKey"
+                   <*> fromJSField o "signingKey"
+  fromJSON _ = fail "fromJSON VssCertificate: type mismatch"
 
 instance (ReportSchemaErrors m) => FromJSON m DelegationCertificate where
-  fromJSON _ = fail "fromJSON DelegationCertificate: todo"
+  fromJSON o@(JSObject _) =
+    DelegationCertificate <$> fromJSField o "cert"
+                          <*> fromJSField o "delegatePk"
+                          <*> fromJSField o "issuerPk"
+                          <*> fromJSField o "omega"
+  fromJSON _ = fail "fromJSON DelegationCertificate: type mismatch"
+
+instance (ReportSchemaErrors m) => FromObjectKey m T.Text where
+  fromObjectKey = pure . Just . toS
 
 instance (ReportSchemaErrors m) => FromJSON m GenesisData where
     fromJSON obj = do

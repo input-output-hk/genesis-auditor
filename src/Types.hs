@@ -37,13 +37,13 @@ data DelegationCertificate = DelegationCertificate {
     dc_cert       :: !Text
   , dc_delegatePk :: !Text
   , dc_issuerPk   :: !Text
-  , dc_omega      :: !Int
+  , dc_omega      :: !Int64
   } deriving (Show, Eq)
 
 deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 3 } ''DelegationCertificate
 
 data VssCertificate = VssCertificate {
-    vss_expiryEpoch :: !Int
+    vss_expiryEpoch :: !Int64
   , vss_signature   :: !Text
   , vss_vssKey      :: !Text
   , vss_signingKey  :: !Text
@@ -57,7 +57,7 @@ type GenesisNonAvvmBalances    = JSON.Object
 type BlockVersionData          = JSON.Object
 type ProtocolConstants         = JSON.Object
 type GenesisAvvmBalances       = HM.HashMap Text Text
-type SharedSeed                = JSON.Object
+type SharedSeed                = String
 type AddressHash               = Text
 type GenesisDelegation         = HM.HashMap AddressHash DelegationCertificate
 type VssCerts                  = HM.HashMap AddressHash VssCertificate

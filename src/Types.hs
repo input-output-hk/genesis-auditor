@@ -28,6 +28,8 @@ data CLI = CLI
   , vssCertsFile     :: FilePath
   , avvmFile         :: FilePath
   , genesisFile      :: FilePath
+  , removedFromAvvm  :: Maybe FilePath
+  , addedToAvvm      :: Maybe FilePath
   , verbose          :: Bool
   } deriving Show
 
@@ -71,6 +73,13 @@ data AvvmEntry = AvvmEntry
 deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 3 } ''AvvmEntry
 
 type AvvmLedger = [AvvmEntry]
+
+data ManualLedgerEntry = ManualLedgerEntry
+    { mle_vendingAddress :: Text
+    , mle_lovelace :: Int64
+    } deriving (Show, Eq)
+
+deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 4 } ''ManualLedgerEntry
 
 data GenesisData = GenesisData
     { gdAvvmDistr        :: GenesisAvvmBalances

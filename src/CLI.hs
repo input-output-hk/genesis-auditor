@@ -16,6 +16,8 @@ parseCLI = CLI
       <*> parseVssFile
       <*> parseAvvmFile
       <*> parseGenesisFile
+      <*> parseRemovedFromAvvm
+      <*> parseAddedToAvvm
       <*> parseVerbosity
 
 parserHash :: Parser ByteString
@@ -52,6 +54,18 @@ parseGenesisFile = strOption
           ( short 'i'
          <> metavar "PATH-TO-INPUT-GENESIS-JSON"
          <> help "The path to the input genesis JSON file." )
+
+parseRemovedFromAvvm :: Parser (Maybe FilePath)
+parseRemovedFromAvvm = optional $ strOption
+          ( long "removed-from-avvm"
+         <> metavar "REMOVED-FROM-AVVM-JSON"
+         <> help "Contains entries that are known to be removed from the AVVM output." )
+
+parseAddedToAvvm :: Parser (Maybe FilePath)
+parseAddedToAvvm = optional $ strOption
+          ( long "added-to-avvm"
+         <> metavar "ADDED-TO-AVVM-JSON"
+         <> help "Contains entries that are known to be added to the AVVM output." )
 
 parseVerbosity :: Parser Bool
 parseVerbosity = switch

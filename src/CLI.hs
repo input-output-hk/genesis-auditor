@@ -16,6 +16,7 @@ parseCLI = CLI
       <*> parseVssFile
       <*> parseAvvmFile
       <*> parseGenesisFile
+      <*> parseVerbosity
 
 parserHash :: Parser ByteString
 parserHash = C8.pack <$> strOption
@@ -51,3 +52,8 @@ parseGenesisFile = strOption
           ( short 'i'
          <> metavar "PATH-TO-INPUT-GENESIS-JSON"
          <> help "The path to the input genesis JSON file." )
+
+parseVerbosity :: Parser Bool
+parseVerbosity = switch
+          ( short 'v'
+         <> help "Use this flag to have more verbose output." )

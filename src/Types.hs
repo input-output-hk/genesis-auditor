@@ -28,6 +28,7 @@ data CLI = CLI
   , vssCertsFile     :: FilePath
   , avvmFile         :: FilePath
   , genesisFile      :: FilePath
+  , verbose          :: Bool
   } deriving Show
 
 newtype Auditor a = Auditor { runAuditor :: ReaderT CLI IO a }

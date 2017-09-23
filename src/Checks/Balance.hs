@@ -55,10 +55,16 @@ doCheckAvvmDistribution GenesisData{..} = do
                          nUnexpected = HM.size unexpected
 
                      in CheckFailed $ unlines [ "Mismatch in Avvm balance"
-                                              , show nMissing <> " Addresses missing in the genesis data: " <> (toS . PP.pShowNoColor . take 5 . HM.toList $ missing)
-                                                <> "\n    and " <> show (nMissing - 5) <> " more"
-                                              , show nUnexpected <> " Unexpected addresses: "  <> (toS . PP.pShowNoColor . take 2 . HM.toList $ unexpected)
-                                                <> "\n    and " <> show (nUnexpected - 5) <> " more"
+                                              , show nMissing <> " Addresses missing in the genesis data: "
+                                                <> if verbose
+                                                  then toS . PP.pShowNoColor. HM.toList $ missing
+                                                  else (toS . PP.pShowNoColor . take 5 . HM.toList $ missing)
+                                                       <> "\n    and " <> show (nMissing - 5) <> " more"
+                                              , show nUnexpected <> " Unexpected addresses: "
+                                                <> if verbose
+                                                   then toS . PP.pShowNoColor . HM.toList $ unexpected
+                                                   else (toS . PP.pShowNoColor . take 2 . HM.toList $ unexpected)
+                                                        <> "\n    and " <> show (nUnexpected - 5) <> " more"
                                               ]
                         -- TODO: look for imbalances in addresses that exist in both
 

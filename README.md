@@ -28,7 +28,7 @@ delegation-vss-correspondence -> Check Passed
 
 The asserts the following properties of the genesis data:
 
-- [ ] The `avvmDistr` matches the output from the AVVM
+- [X] The `avvmDistr` matches the output from the AVVM
 - [X] the `nonAvvmBalances` is empty
 - [X] The stakeholder addresses in the json file are exactly those provided in the stakeholders file
 - [X] For each stakeholder address, there is a delegation certificate.
@@ -36,6 +36,6 @@ The asserts the following properties of the genesis data:
 - [X] Each of the `delegatePk` from the delegation certificates corresponds to a `signingKey` in a vss certificate
 - [X] There are no vss certificates where the signing key is not used as a `delegatePk` in one of the delegation certificates
 - [X] Check that the number of stakeholders and the number of vss certificates are the same.  This could be violated if multiple stakeholders delegated to the same core node
-- [ ] Converting to canonical JSON form and taking the `blake2b_256_sha` results in the specified hash.
-- [ ] Consistency checks on the `vssCerts`
+- [X] Converting to canonical JSON form and taking the `blake2b_256_sha` results in the specified hash.
+- [X] Consistency checks on the `vssCerts`
 - [X] Check that there are no duplicate JSON entries in the input

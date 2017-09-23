@@ -30,7 +30,10 @@ library
                        , ansi-terminal
                        , canonical-json
                        , cryptonite
+                       , hashable
+                       , fail
                        , memory
+                       , scientific
                        , optparse-applicative
                        , mtl
                        , pretty-simple
@@ -42,6 +45,7 @@ library
                        -- Needed to check dupes
                        , json
                        , base64-bytestring
+                       , vector
   default-language:    Haskell2010
 
 executable genesis-auditor

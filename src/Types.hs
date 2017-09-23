@@ -1,4 +1,5 @@
 {-# LANGUAGE GeneralizedNewtypeDeriving #-}
+{-# LANGUAGE TypeSynonymInstances #-}
 {-# LANGUAGE OverloadedStrings #-}
 {-# LANGUAGE TemplateHaskell #-}
 module Types where
@@ -7,6 +8,8 @@ import qualified Data.HashMap.Lazy as HM
 import Data.Aeson as JSON
 import Data.Aeson.Types
 import Data.Aeson.TH
+import qualified Data.Scientific as Scientific
+import           Text.JSON.Canonical        (Int54)
 import Data.Int (Int64)
 import Control.Monad.Trans.Reader
 import Data.Text (Text)
@@ -34,13 +37,13 @@ data DelegationCertificate = DelegationCertificate {
     dc_cert       :: !Text
   , dc_delegatePk :: !Text
   , dc_issuerPk   :: !Text
-  , dc_omega      :: !Int
+  , dc_omega      :: !Int64
   } deriving (Show, Eq)
 
 deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 3 } ''DelegationCertificate
 
 data VssCertificate = VssCertificate {
-    vss_expiryEpoch :: !Int
+    vss_expiryEpoch :: !Int64
   , vss_signature   :: !Text
   , vss_vssKey      :: !Text
   , vss_signingKey  :: !Text
@@ -48,13 +51,13 @@ data VssCertificate = VssCertificate {
 
 deriveFromJSON defaultOptions { fieldLabelModifier = Prelude.drop 4 } ''VssCertificate
 
-type GenesisWStakeholders      = JSON.Object -- TODO: check what happens to duplicates
-type Timestamp                 = JSON.Value
+type GenesisWStakeholders      = JSON.Object
+type Timestamp                 = Int54
 type GenesisNonAvvmBalances    = JSON.Object
-type BlockVersionData          = JSON.Value
-type ProtocolConstants         = JSON.Value
+type BlockVersionData          = JSON.Object
+type ProtocolConstants         = JSON.Object
 type GenesisAvvmBalances       = HM.HashMap Text Text
-type SharedSeed                = JSON.Value
+type SharedSeed                = String
 type AddressHash               = Text
 type GenesisDelegation         = HM.HashMap AddressHash DelegationCertificate
 type VssCerts                  = HM.HashMap AddressHash VssCertificate
@@ -79,6 +82,12 @@ data GenesisData = GenesisData
     , gdStartTime        :: Timestamp
     , gdVssCerts         :: VssCerts
     } deriving (Show, Eq)
+
+instance FromJSON Timestamp where
+  parseJSON (Number n) =
+    let toInt64 = read . show . Scientific.coefficient . Scientific.normalize
+        in return $ toInt64 n
+  parseJSON x = typeMismatch "Timestamp" x
 
 instance FromJSON GenesisData where
   parseJSON (Object o) =
